@@ -1,0 +1,87 @@
+services:
+  # Oracle  database for meta and vector
+  oracle:
+    image: container-registry.oracle.com/database/free:latest
+    #image: container-registry.oracle.com/database/free:23.6.0.0-arm64
+    profiles:
+      - oracle
+    restart: always
+    ports:
+      - "1521:1521"
+    volumes:
+      - source: oradata
+        type: volume
+        target: /opt/oracle/oradata
+      #- ./startupscripts:/opt/oracle/scripts/startup
+    environment:
+      ORACLE_PWD: ${ORACLE_PWD:-Dify123456}
+      ORACLE_CHARACTERSET: ${ORACLE_CHARACTERSET:-AL32UTF8}
+
+  # The redis cache.
+  redis:
+    image: redis:6-alpine
+    restart: always
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:-difyai123456}
+    volumes:
+      # Mount the redis data directory to the container.
+      - ${REDIS_HOST_VOLUME:-./volumes/redis/data}:/data
+    # Set the redis password when startup redis server.
+    command: redis-server --requirepass ${REDIS_PASSWORD:-difyai123456}
+    ports:
+      - "${EXPOSE_REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+
+  # The DifySandbox
+  sandbox:
+    image: langgenius/dify-sandbox:0.2.10
+    restart: always
+    environment:
+      # The DifySandbox configurations
+      # Make sure you are changing this key for your deployment with a strong key.
+      # You can generate a strong key using `openssl rand -base64 42`.
+      API_KEY: ${SANDBOX_API_KEY:-dify-sandbox}
+      GIN_MODE: ${SANDBOX_GIN_MODE:-release}
+      WORKER_TIMEOUT: ${SANDBOX_WORKER_TIMEOUT:-15}
+      ENABLE_NETWORK: ${SANDBOX_ENABLE_NETWORK:-true}
+      HTTP_PROXY: ${SANDBOX_HTTP_PROXY:-http://ssrf_proxy:3128}
+      HTTPS_PROXY: ${SANDBOX_HTTPS_PROXY:-http://ssrf_proxy:3128}
+      SANDBOX_PORT: ${SANDBOX_PORT:-8194}
+    volumes:
+      - ./volumes/sandbox/dependencies:/dependencies
+      - ./volumes/sandbox/conf:/conf
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8194/health" ]
+    networks:
+      - ssrf_proxy_network
+
+  # ssrf_proxy server
+  # for more information, please refer to
+  # https://docs.dify.ai/learn-more/faq/install-faq#id-18.-why-is-ssrf_proxy-needed
+  ssrf_proxy:
+    image: ubuntu/squid:latest
+    restart: always
+    volumes:
+      - ./ssrf_proxy/squid.conf.template:/etc/squid/squid.conf.template
+      - ./ssrf_proxy/docker-entrypoint.sh:/docker-entrypoint-mount.sh
+    entrypoint: [ "sh", "-c", "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
+    environment:
+      # pls clearly modify the squid env vars to fit your network environment.
+      HTTP_PORT: ${SSRF_HTTP_PORT:-3128}
+      COREDUMP_DIR: ${SSRF_COREDUMP_DIR:-/var/spool/squid}
+      REVERSE_PROXY_PORT: ${SSRF_REVERSE_PROXY_PORT:-8194}
+      SANDBOX_HOST: ${SSRF_SANDBOX_HOST:-sandbox}
+      SANDBOX_PORT: ${SANDBOX_PORT:-8194}
+    ports:
+      - "${EXPOSE_SSRF_PROXY_PORT:-3128}:${SSRF_HTTP_PORT:-3128}"
+      - "${EXPOSE_SANDBOX_PORT:-8194}:${SANDBOX_PORT:-8194}"
+    networks:
+      - ssrf_proxy_network
+      - default
+
+networks:
+  # create a network between sandbox, api and ssrf_proxy, and can not access outside.
+  ssrf_proxy_network:
+    driver: bridge
+    internal: true
