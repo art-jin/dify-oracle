@@ -67,7 +67,7 @@ Dify 是一个开源的 LLM 应用开发平台。其直观的界面结合了 AI 
 - **云 </br>**
 Dify官方提供[ Dify 云服务](https://dify.ai)，任何人都可以零设置尝试。它提供了自部署版本的所有功能，并在沙盒计划中包含 200 次免费的 GPT-4 调用。
 
-- 本项目是基于社区版的,需要以源代码方式部署运行
+- 本项目是基于社区版的,需要以自托管,且以源代码方式部署运行
 - **自托管 Dify 社区版</br>**
 
 
@@ -85,12 +85,80 @@ Dify官方提供[ Dify 云服务](https://dify.ai)，任何人都可以零设置
 - RAM >= 4 GiB
 
 ### 使用源码部署方式请按下面步骤
-
+#### 1、Clone Dify 
+```bash
+git clone https://github.com/arthurjinhui/dify-oracle.git
+```
+Before enabling business services, we need to first deploy Oracle / Redis . We can start them with the following commands:
 ```bash
 cd docker
-cp .env.example .env
-docker compose up -d
+cp middleware.env.example middleware.env
+docker compose -f docker-compose.middleware.yaml up -d
 ```
+
+#### 2、Server Deployment
+2.1
+```bash
+pyenv install 3.12
+```
+2.2
+```bash
+pyenv global 3.12
+```
+
+2.3 Follow these steps :
+```bash
+cd api
+```
+
+2.4  :
+```bash
+cp .env.example .env
+```
+2.5  :
+```bash
+awk -v key="$(openssl rand -base64 42)" '/^SECRET_KEY=/ {sub(/=.*/, "=" key)} 1' .env > temp_env && mv temp_env .env
+```
+2.6  :
+```bash
+poetry shell
+poetry env use 3.12
+poetry install
+```
+2.7  :
+```bash
+poetry run flask db upgrade
+```
+2.8  :
+```bash
+poetry run flask run --host 0.0.0.0 --port=5001 --debug
+```
+2.9  :
+```bash
+poetry run celery -A app.celery worker -P gevent -c 1 --loglevel INFO -Q dataset,generation,mail,ops_trace
+```
+#### 3、Deploy the frontend page
+
+3.1、Enter the web directory
+```bash
+cd web
+```
+
+3.2、Install the dependencies.
+```bash
+npm install
+```
+
+3.3、 Build the code
+```bash
+npm run build
+```
+
+3.4、Start the web service
+```bash
+npm run start
+```
+
 
 ## Contributing
 
