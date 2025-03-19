@@ -1,10 +1,8 @@
 ![cover-v5-optimized](https://github.com/langgenius/dify/assets/13230914/f9e19af5-61ba-4119-b926-d10c4c06ebab)
 
 <div align="center">
-  <a href="https://cloud.dify.ai">Dify 云服务</a> ·
   <a href="https://docs.dify.ai/getting-started/install-self-hosted">自托管</a> ·
   <a href="https://docs.dify.ai">文档</a> ·
-  <a href="https://udify.app/chat/22L1zSxg6yW1cWQg">（需用英文）常见问题解答 / 联系团队</a>
 </div>
 
 <p align="center">
@@ -43,143 +41,106 @@
   <a href="https://trendshift.io/repositories/2152" target="_blank"><img src="https://trendshift.io/api/badge/repositories/2152" alt="langgenius%2Fdify | 趋势转变" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </div>
 
-Dify 是一个开源的 LLM 应用开发平台。其直观的界面结合了 AI 工作流、RAG 管道、Agent、模型管理、可观测性功能等，让您可以快速从原型到生产。以下是其核心功能列表：
-<br> </br>
-**1. 工作流**: 
-<br>  在画布上构建和测试功能强大的 AI 工作流程，利用以下所有功能以及更多功能。
-<br>**2. 全面的模型支持**: 
-<br>  与数百种专有/开源 LLMs 以及数十种推理提供商和自托管解决方案无缝集成，涵盖 GPT、Mistral、Llama3 以及任何与 OpenAI API 兼容的模型。完整的支持模型提供商列表可在[此处](https://docs.dify.ai/getting-started/readme/model-providers)找到。
-<br>**3. Prompt IDE**: 
-<br>  用于制作提示、比较模型性能以及向基于聊天的应用程序添加其他功能（如文本转语音）的直观界面。
-<br>**4. RAG Pipeline**: 
-<br>  广泛的 RAG 功能，涵盖从文档摄入到检索的所有内容，支持从 PDF、PPT 和其他常见文档格式中提取文本的开箱即用的支持。
-<br>**5. Agent 智能体**: 
-<br>  您可以基于 LLM 函数调用或 ReAct 定义 Agent，并为 Agent 添加预构建或自定义工具。Dify 为 AI Agent 提供了50多种内置工具，如谷歌搜索、DALL·E、Stable Diffusion 和 WolframAlpha 等。
-<br>**6. LLMOps**: 
-<br>  随时间监视和分析应用程序日志和性能。您可以根据生产数据和标注持续改进提示、数据集和模型。
-<br>**7. 后端即服务**: 
-<br>  所有 Dify 的功能都带有相应的 API，因此您可以轻松地将 Dify 集成到自己的业务逻辑中。
-<br> </br>
+本项目源自 <a href="https://github.com/langgenius/dify">Dify</a> 这个开源LLM 应用开发平台项目, 并参考将Dify项目元数据库postgres迁移到MySQL的<a href="https://github.com/oceanbase-devhub/dify">oceanbase-devhub/dify</a>项目, 将该项目元数据库适配到Oracle
+数据库(目前适配Dify自托管 社区版的<a href="https://github.com/langgenius/dify/tree/0.14.2">0.14.2</a>版本),适配供学习和参考。
 
-## 使用 Dify
-<br> </br>
-
-- **云 </br>**
-Dify官方提供[ Dify 云服务](https://dify.ai)，任何人都可以零设置尝试。它提供了自部署版本的所有功能，并在沙盒计划中包含 200 次免费的 GPT-4 调用。
-
-- 本项目是基于社区版的,需要以自托管,且以源代码方式部署运行
-- **自托管 Dify 社区版</br>**
-
-
-在 GitHub 上给 Dify Star，并立即收到新版本的通知。
-
-![star-us](https://github.com/langgenius/dify/assets/13230914/b823edc1-6388-4e25-ad45-2f6b187adbb4)
-
-## 安装社区版
-
-### 系统要求
-
-在安装 Dify 之前，请确保您的机器满足以下最低系统要求：
-
-- CPU >= 2 Core
-- RAM >= 4 GiB
-
-### 使用源码部署方式请按下面步骤
-#### 1、Clone Dify 
+## 安装部署
+目前仅支持使用源码部署方式部署
+### 1、Clone Dify 
+获得源码
 ```bash
-git clone https://github.com/arthurjinhui/dify-oracle.git
+git https://github.com/art-jin/dify-oracle.git
 ```
-Before enabling business services, we need to first deploy Oracle / Redis . We can start them with the following commands:
+
+启动容器:
+在启用业务服务之前，我们需要先部署 Oracle / Redis ，可以使用以下命令启动它们：
 ```bash
 cd docker
 cp middleware.env.example middleware.env
 docker compose -f docker-compose.middleware.yaml up -d
+docker compose -f docker-compose.middleware.yaml up -d oracle
 ```
+启动oracle容器,会拉取oracle 23ai free的镜像,并且执行/docker/startupscripts/init_user.script脚本。
+创建两个用户: 用户difyMeta0142,用于元数据库表的搭建。 用户dify,用于向量库的搭建。
 
-#### 2、Server Deployment
-2.1
+### 2、Server Deployment
+源代码的部署步骤,参考自Dify文档: <a href="https://docs.dify.ai/getting-started/install-self-hosted/local-source-code">Start with Local Source Code</a>, 并在差异部分做详细说明.
+#### 2.1、Installation of the basic environment:
+Server startup requires Python 3.12. It is recommended to use pyenv for quick installation of the Python environment.<br>
+To install additional Python versions, use pyenv install.
 ```bash
 pyenv install 3.12
 ```
-2.2
+To switch to the "3.12" Python environment, use the following command:
 ```bash
 pyenv global 3.12
 ```
 
-2.3 Follow these steps :
+#### 2.2 Follow these steps :
+1、
 ```bash
 cd api
 ```
-
-2.4  :
+2、.env.example中,已经将默认向量数据库,配置为oracle
 ```bash
 cp .env.example .env
 ```
-2.5  :
+3、 :
 ```bash
 awk -v key="$(openssl rand -base64 42)" '/^SECRET_KEY=/ {sub(/=.*/, "=" key)} 1' .env > temp_env && mv temp_env .env
 ```
-2.6  :
+4、Dify API service uses <a href="https://python-poetry.org/docs/">Poetry</a> to manage dependencies.:
+需要先安装Poetry, 还要再安装poetry shell插件.
+```bash
+poetry self add poetry-plugin-shell : https://github.com/python-poetry/poetry-plugin-shell
+```
+然后按照Dify文档步骤继续执行如下命令
 ```bash
 poetry shell
 poetry env use 3.12
 poetry install
 ```
-2.7  :
+
+5 :Perform the database migration:<br>
+Perform database migration to the latest version:
 ```bash
 poetry run flask db upgrade
 ```
-2.8  :
+这一步会通过/api/migrations/下的脚步,创建元数据库表.
+
+#### 2.3 Start the API server:
+
 ```bash
 poetry run flask run --host 0.0.0.0 --port=5001 --debug
 ```
-2.9  :
+
+#### 2.4 Start the Worker service
+
 ```bash
 poetry run celery -A app.celery worker -P gevent -c 1 --loglevel INFO -Q dataset,generation,mail,ops_trace
 ```
-#### 3、Deploy the frontend page
+### 3、Deploy the frontend page
 
-3.1、Enter the web directory
+#### 3.1、Enter the web directory
 ```bash
 cd web
 ```
 
-3.2、Install the dependencies.
+#### 3.2、Install the dependencies.
 ```bash
 npm install
 ```
 
-3.3、 Build the code
+#### 3.3、 Build the code
 ```bash
 npm run build
 ```
 
-3.4、Start the web service
+#### 3.4、Start the web service
 ```bash
 npm run start
 ```
-
-
 ## Contributing
-
-对于那些想要贡献代码的人，请参阅我们的[贡献指南](https://github.com/langgenius/dify/blob/main/CONTRIBUTING.md)。
-同时，请考虑通过社交媒体、活动和会议来支持 Dify 的分享。
-
-> 我们正在寻找贡献者来帮助将Dify翻译成除了中文和英文之外的其他语言。如果您有兴趣帮助，请参阅我们的[i18n README](https://github.com/langgenius/dify/blob/main/web/i18n/README.md)获取更多信息，并在我们的[Discord社区服务器](https://discord.gg/8Tpq4AcN9c)的`global-users`频道中留言。
-
-**Contributors**
-
-<a href="https://github.com/langgenius/dify/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=langgenius/dify" />
-</a>
-
-## 社区与支持
-
-我们欢迎您为 Dify 做出贡献，以帮助改善 Dify。包括：提交代码、问题、新想法，或分享您基于 Dify 创建的有趣且有用的 AI 应用程序。同时，我们也欢迎您在不同的活动、会议和社交媒体上分享 Dify。
-
-## 安全问题
-
-为了保护您的隐私，请避免在 GitHub 上发布安全问题。发送问题至 security@dify.ai，我们将为您做更细致的解答。
 
 ## License
 
