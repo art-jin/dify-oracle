@@ -2,7 +2,6 @@ services:
   # Oracle  database for meta and vector
   oracle:
     image: container-registry.oracle.com/database/free:latest
-    #image: container-registry.oracle.com/database/free:23.6.0.0-arm64
     profiles:
       - oracle
     restart: always
@@ -12,7 +11,7 @@ services:
       - source: oradata
         type: volume
         target: /opt/oracle/oradata
-      #- ./startupscripts:/opt/oracle/scripts/startup
+      - ./startupscripts:/opt/oracle/scripts/startup
     environment:
       ORACLE_PWD: ${ORACLE_PWD:-Dify123456}
       ORACLE_CHARACTERSET: ${ORACLE_CHARACTERSET:-AL32UTF8}

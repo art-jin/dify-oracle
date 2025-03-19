@@ -9,30 +9,6 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.dialects.oracle import RAW ##Arthur:Oracle
 import uuid ##Arthur:Oracle
 
-""" ###Arthur:MySQL/Oracle
-class StringUUID(TypeDecorator):
-    impl = CHAR
-    cache_ok = True
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        elif dialect.name in {"postgresql", "mysql"}:
-            return str(value)
-        else:
-            return value.hex
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
-            return dialect.type_descriptor(UUID())
-        else:
-            return dialect.type_descriptor(CHAR(36))
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        return str(value)
-"""
 ##Oracle:MySQL/Oracle
 ##这个实现假设你的 Oracle 数据库支持 RAW 类型。在实际使用前，请在你的 Oracle 环境中测试这个实现，以确保它能正确工作。
 class StringUUID(TypeDecorator):
@@ -73,31 +49,6 @@ class StringUUID(TypeDecorator):
         return str(value)
 
 
-"""##Arthur:MySQL
-class AdjustedJSON(TypeDecorator):
-    #Adjusted JSON type for PostgreSQL and MySQL.
-    #It is treated as JSONB in PostgreSQL and JSON in MySQL.
-    impl = SAJSON
-    cache_ok = True
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        return json.dumps(value)
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
-            return dialect.type_descriptor(JSONB)
-        elif dialect.name == "mysql":
-            return dialect.type_descriptor(MYSQL_JSON)
-        else:
-            raise NotImplementedError(f"Unsupported dialect: {dialect.name}")
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        return json.loads(value)
-    """
 import json
 from sqlalchemy import TypeDecorator
 from sqlalchemy.dialects.postgresql import JSONB
@@ -144,22 +95,7 @@ class AdjustedJSON(TypeDecorator):
         return json.loads(value)
 
 
-"""###Arthur:MySQL
-class AdaptiveText(TypeDecorator):
-    Adaptive Text type for PostgreSQL and MySQL.
-    It is treated as TEXT in PostgreSQL and LONGTEXT in MySQL.
 
-    impl = Text
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
-            return dialect.type_descriptor(Text)
-        elif dialect.name == "mysql":
-            return dialect.type_descriptor(LONGTEXT)
-        else:
-            raise NotImplementedError(f"Unsupported dialect: {dialect.name}")
-    """
 ###Arthur:Oracle
 from sqlalchemy.types import TypeDecorator, Text
 from sqlalchemy.dialects.mysql import LONGTEXT
@@ -193,7 +129,7 @@ class PostgresJSONIndex(Index):
 
     pass
 """
-##Arthur:这个实现假设你的 Oracle 数据库版本支持 JSON 操作。
+##这个实现假设你的 Oracle 数据库版本支持 JSON 操作。
 from sqlalchemy import Index
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement

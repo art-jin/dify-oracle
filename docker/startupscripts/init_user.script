@@ -4,16 +4,11 @@ alter session set container= freepdb1;
 create user dify identified by dify DEFAULT TABLESPACE users quota unlimited on users;
 grant DB_DEVELOPER_ROLE to dify;
 
-create user difyMetaDataUser identified by difyMetal23456 DEFAULT TABLESPACE users quota unlimited on users;
-grant DB_DEVELOPER_ROLE to difyMetaDataUser;
+create user difyMeta0142 identified by difyMetal23456 DEFAULT TABLESPACE users quota unlimited on users;
+grant DB_DEVELOPER_ROLE to difyMeta0142;
 
 BEGIN
 CTX_DDL.CREATE_PREFERENCE('my_chinese_vgram_lexer','CHINESE_VGRAM_LEXER');
-END;
-
-CREATE OR REPLACE FUNCTION uuid_generate_v4 RETURN RAW IS
-BEGIN
-  RETURN SYS_GUID();
 END;
 
 /
