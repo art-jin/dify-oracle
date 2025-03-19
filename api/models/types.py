@@ -5,9 +5,9 @@ from sqlalchemy import JSON as SAJSON
 from sqlalchemy.dialects.mysql import JSON as MYSQL_JSON
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-#from sqlalchemy.types import TypeDecorator, CHAR, UUID ##Arthur:Oracle
-from sqlalchemy.dialects.oracle import RAW ##Arthur:Oracle
-import uuid ##Arthur:Oracle
+#from sqlalchemy.types import TypeDecorator, CHAR, UUID ##Oracle
+from sqlalchemy.dialects.oracle import RAW ##Oracle
+import uuid ##Oracle
 
 ##Oracle:MySQL/Oracle
 ##这个实现假设你的 Oracle 数据库支持 RAW 类型。在实际使用前，请在你的 Oracle 环境中测试这个实现，以确保它能正确工作。
@@ -18,7 +18,7 @@ class StringUUID(TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
-        elif dialect.name == "oracle":#Arthur:Oracle
+        elif dialect.name == "oracle":#Oracle
             if isinstance(value, uuid.UUID):
                 return value.bytes
             elif isinstance(value, str):
@@ -96,7 +96,7 @@ class AdjustedJSON(TypeDecorator):
 
 
 
-###Arthur:Oracle
+###Oracle
 from sqlalchemy.types import TypeDecorator, Text
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.dialects.oracle import CLOB

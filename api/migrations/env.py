@@ -16,7 +16,7 @@ logger = logging.getLogger("alembic.env")
 
 def get_engine():
     try:
-        # this works with Flask-SQLAlchemy<3 and Alchemical ##Arthur:MySQL/Oracle
+        # this works with Flask-SQLAlchemy<3 and Alchemical ##Oracle:MySQL/Oracle
         return current_app.extensions["migrate"].db.get_engine()
     except (TypeError, AttributeError):
         # this works with Flask-SQLAlchemy>=3

@@ -18,6 +18,6 @@ class OracleDialect_oracledb(OracleDialect):
     def is_disconnect(self, e, connection, cursor):
         return isinstance(e, oracledb.InterfaceError) and "not connected" in str(e).lower()
 
-# 注册新的方言  #Arthur 我取消注册
+# 注册新的方言  #Oracle 我取消注册
 #from sqlalchemy.dialects import registry
 #registry.register("oracle.oracledb", "oracle_dialect", "OracleDialect_oracledb")

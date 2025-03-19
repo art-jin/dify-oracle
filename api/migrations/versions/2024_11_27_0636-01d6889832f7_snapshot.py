@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 import models.types
-from models.types import AdjustedJSON  #Arthur:Oracle
+from models.types import AdjustedJSON  #Oracle
 
 # revision identifiers, used by Alembic.
 revision = "01d6889832f7"
@@ -156,7 +156,7 @@ def upgrade():
         sa.Column("provider", sa.String(length=255), nullable=True),
         sa.Column("model_id", sa.String(length=255), nullable=True),
         #sa.Column("configs", sa.JSON(), nullable=True),
-        sa.Column("configs", AdjustedJSON(sa.CLOB), nullable=True), ##Arthur
+        sa.Column("configs", AdjustedJSON(sa.CLOB), nullable=True), ##Oracle
         sa.Column("created_by", models.types.StringUUID(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.Column("updated_by", models.types.StringUUID(), nullable=True),
@@ -262,7 +262,7 @@ def upgrade():
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("summary", sa.Text(), nullable=True),
         #sa.Column("inputs", sa.JSON(), nullable=False),
-        sa.Column("inputs", AdjustedJSON(sa.CLOB), nullable=False),  ##Arthur
+        sa.Column("inputs", AdjustedJSON(sa.CLOB), nullable=False),  ##Oracle
         sa.Column("introduction", sa.Text(), nullable=True),
         sa.Column("system_instruction", sa.Text(), nullable=True),
         sa.Column("system_instruction_tokens", sa.Integer(), server_default=sa.text("0"), nullable=False),
@@ -343,7 +343,7 @@ def upgrade():
         sa.UniqueConstraint("dataset_id", name=op.f("dataset_keyword_tables_dataset_id_key")),
     )
     with op.batch_alter_table("dataset_keyword_tables", schema=None) as batch_op:
-        #batch_op.create_index("dataset_keyword_table_dataset_id_idx", ["dataset_id"], unique=False)  #Arthur:Oracle:such column list already indexed
+        #batch_op.create_index("dataset_keyword_table_dataset_id_idx", ["dataset_id"], unique=False)  #Oracle:such column list already indexed
         pass
 
     op.create_table(
@@ -529,7 +529,7 @@ def upgrade():
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.Column("doc_type", sa.String(length=40), nullable=True),
         #sa.Column("doc_metadata", sa.JSON(), nullable=True),
-        sa.Column("doc_metadata", AdjustedJSON(sa.CLOB), nullable=True),  ##Arthur
+        sa.Column("doc_metadata", AdjustedJSON(sa.CLOB), nullable=True),  ##Oracle
         sa.Column("doc_form", sa.String(length=255), nullable=False),
         sa.Column("doc_language", sa.String(length=255), nullable=True),
         sa.PrimaryKeyConstraint("id", name="document_pkey"),
@@ -887,17 +887,17 @@ def upgrade():
         sa.Column("id", models.types.StringUUID(), nullable=False,server_default=sa.text("SYS_GUID()")),
         sa.Column("app_id", models.types.StringUUID(), nullable=False),
         #sa.Column("description", sa.JSON(), nullable=False),
-        sa.Column("description", AdjustedJSON(sa.CLOB), nullable=False), #Arthur
+        sa.Column("description", AdjustedJSON(sa.CLOB), nullable=False), #Oracle
         sa.Column("copyright", sa.String(length=255), nullable=False),
         sa.Column("privacy_policy", sa.String(length=255), nullable=False),
-        sa.Column("custom_disclaimer", sa.String(length=4000), nullable=False),  #Arthur:Oracle:sa.TEXT() -> sa.String(length=4000)
+        sa.Column("custom_disclaimer", sa.String(length=4000), nullable=False),  #Oracle:sa.TEXT() -> sa.String(length=4000)
         sa.Column("category", sa.String(length=255), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False),
-        sa.Column("is_listed", sa.Integer(), nullable=False), #Arthur:Oracle: #Arthur:sa.Boolean() -> sa.Integer()
+        sa.Column("is_listed", sa.Integer(), nullable=False), #Oracle: #Oracle:sa.Boolean() -> sa.Integer()
         sa.Column("install_count", sa.Integer(), nullable=False),
         sa.Column("language", sa.String(length=255), nullable=False),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Arthur:Oracle,CURRENT_TIMESTAMP -> CURRENT_TIMESTAMP
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Arthur:Oracle,CURRENT_TIMESTAMP -> CURRENT_TIMESTAMP
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Oracle,CURRENT_TIMESTAMP -> CURRENT_TIMESTAMP
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Oracle,CURRENT_TIMESTAMP -> CURRENT_TIMESTAMP
         sa.PrimaryKeyConstraint("id", name="recommended_app_pkey"),
     )
     with op.batch_alter_table("recommended_apps", schema=None) as batch_op:
@@ -931,19 +931,19 @@ def upgrade():
         sa.Column("default_language", sa.String(length=255), nullable=False),
         sa.Column("chat_color_theme", sa.String(length=255), nullable=True),
         #sa.Column("chat_color_theme_inverted", sa.Boolean(), server_default=sa.text("false"), nullable=False),
-        sa.Column("chat_color_theme_inverted", sa.Integer(), server_default=sa.text("0"), nullable=False),##Arthur:Oracle
+        sa.Column("chat_color_theme_inverted", sa.Integer(), server_default=sa.text("0"), nullable=False),##Oracle
         sa.Column("copyright", sa.String(length=255), nullable=True),
         sa.Column("privacy_policy", sa.String(length=255), nullable=True),
         #sa.Column("show_workflow_steps", sa.Boolean(), server_default=sa.text("true"), nullable=False),
-        sa.Column("show_workflow_steps", sa.Integer(), server_default=sa.text("1"), nullable=False),##Arthur:Oracle
+        sa.Column("show_workflow_steps", sa.Integer(), server_default=sa.text("1"), nullable=False),##Oracle
         #sa.Column("use_icon_as_answer_icon", sa.Boolean(), server_default=sa.text("false"), nullable=False),
-        sa.Column("use_icon_as_answer_icon", sa.Integer(), server_default=sa.text("0"), nullable=False), ##Arthur:Oracle
+        sa.Column("use_icon_as_answer_icon", sa.Integer(), server_default=sa.text("0"), nullable=False), ##Oracle
         #sa.Column("custom_disclaimer", sa.TEXT(), nullable=False),
-        sa.Column("custom_disclaimer", sa.CLOB(), nullable=False),  #Arthur:Oracle
+        sa.Column("custom_disclaimer", sa.CLOB(), nullable=False),  #Oracle
         sa.Column("customize_domain", sa.String(length=255), nullable=True),
         sa.Column("customize_token_strategy", sa.String(length=255), nullable=False),
         #sa.Column("prompt_public", sa.Boolean(), server_default=sa.text("false"), nullable=False),
-        sa.Column("prompt_public", sa.Integer(), server_default=sa.text("0"), nullable=False),##Arthur:Oracle
+        sa.Column("prompt_public", sa.Integer(), server_default=sa.text("0"), nullable=False),##Oracle
         sa.Column("status", sa.String(length=255), nullable=False),
         sa.Column("created_by", models.types.StringUUID(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
@@ -1041,7 +1041,7 @@ def upgrade():
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("encrypt_public_key", sa.Text(), nullable=True),
         sa.Column("plan", sa.String(length=255), nullable=False),
-        sa.Column("status", sa.String(length=255), nullable=False,server_default=sa.text("'normal'")),#Arthur:Oracle  server_default=db.text("'normal'") normal/archive
+        sa.Column("status", sa.String(length=255), nullable=False,server_default=sa.text("'normal'")),#Oracle  server_default=db.text("'normal'") normal/archive
         sa.Column("custom_config", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
@@ -1080,9 +1080,9 @@ def upgrade():
         sa.Column("tools_str", sa.Text(), nullable=False),
         sa.Column("credentials_str", sa.Text(), nullable=False),
         sa.Column("privacy_policy", sa.String(length=255), nullable=True),
-        sa.Column("custom_disclaimer", sa.CLOB(), nullable=False),#Arthur:Oracle,sa.TEXT() - sa.CLOB(),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Arthur:Oracle
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Arthur:Oracle
+        sa.Column("custom_disclaimer", sa.CLOB(), nullable=False),#Oracle,sa.TEXT() - sa.CLOB(),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Oracle
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Oracle
         sa.PrimaryKeyConstraint("id", name="tool_api_provider_pkey"),
         sa.UniqueConstraint("name", "tenant_id", name="unique_api_tool_provider"),
     )
@@ -1200,13 +1200,13 @@ def upgrade():
         sa.Column("app_id", models.types.StringUUID(), nullable=False),
         sa.Column("tracing_provider", sa.String(length=255), nullable=True),
         #sa.Column("tracing_config", sa.JSON(), nullable=True),
-        sa.Column("tracing_config", AdjustedJSON(sa.CLOB), nullable=True),##Arthur
+        sa.Column("tracing_config", AdjustedJSON(sa.CLOB), nullable=True),##Oracle
         #sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Arthur:Oracle
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Oracle
         #sa.Column("updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Arthur:Oracle
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Oracle
         #sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
-        sa.Column("is_active", sa.Integer(), server_default=sa.text("1"), nullable=False),#Arthur:Oracle
+        sa.Column("is_active", sa.Integer(), server_default=sa.text("1"), nullable=False),#Oracle
         sa.PrimaryKeyConstraint("id", name="tracing_app_config_pkey"),
     )
     with op.batch_alter_table("trace_app_config", schema=None) as batch_op:
@@ -1225,15 +1225,15 @@ def upgrade():
         sa.Column("created_by_role", sa.String(length=255), nullable=False),
         sa.Column("created_by", models.types.StringUUID(), nullable=False),
         #sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Arthur:Oracle
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),#Oracle
         #sa.Column("used", sa.Boolean(), server_default=sa.text("false"), nullable=False),
-        sa.Column("used", sa.Integer(), server_default=sa.text("0"), nullable=False),#Arthur:Oracle
+        sa.Column("used", sa.Integer(), server_default=sa.text("0"), nullable=False),#Oracle
         sa.Column("used_by", models.types.StringUUID(), nullable=True),
         sa.Column("used_at", sa.DateTime(), nullable=True),
         sa.Column("hash", sa.String(length=255), nullable=True),
         #sa.Column("source_url", sa.TEXT(), nullable=False),
-        #sa.Column("source_url", sa.CLOB(), nullable=False),#Arthur:Oracle
-        sa.Column("source_url", sa.String(length=2048), nullable=True),  # Arthur:Oracle
+        #sa.Column("source_url", sa.CLOB(), nullable=False),#Oracle
+        sa.Column("source_url", sa.String(length=2048), nullable=True),  # Oracle
         sa.PrimaryKeyConstraint("id", name="upload_file_pkey"),
     )
     with op.batch_alter_table("upload_files", schema=None) as batch_op:
@@ -1408,10 +1408,10 @@ def upgrade():
         sa.Column("override_model_configs", sa.Text(), nullable=True),
         sa.Column("conversation_id", models.types.StringUUID(), nullable=False),
         #sa.Column("inputs", sa.JSON(), nullable=False),
-        sa.Column("inputs", AdjustedJSON(sa.CLOB), nullable=False), #Arthur
+        sa.Column("inputs", AdjustedJSON(sa.CLOB), nullable=False), #Oracle
         sa.Column("query", sa.Text(), nullable=False),
         #sa.Column("message", sa.JSON(), nullable=False),
-        sa.Column("message", AdjustedJSON(sa.CLOB), nullable=False), #Arthur
+        sa.Column("message", AdjustedJSON(sa.CLOB), nullable=False), #Oracle
         sa.Column("message_tokens", sa.Integer(), server_default=sa.text("0"), nullable=False),
         sa.Column("message_unit_price", sa.Numeric(precision=10, scale=4), nullable=False),
         sa.Column(

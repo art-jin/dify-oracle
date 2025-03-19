@@ -204,7 +204,7 @@ class AccountService:
         account = Account()
         account.email = email
         account.name = name
-        account.status = 'active' #Arthur: set default
+        account.status = 'active' #Oracle: set default
 
         if password:
             # generate password salt
@@ -234,7 +234,7 @@ class AccountService:
     ) -> Account:
         """create account"""
         account = AccountService.create_account(
-            email=email, name=name, interface_language=interface_language, password=password #Arthur
+            email=email, name=name, interface_language=interface_language, password=password #Oracle
         )
 
         TenantService.create_owner_tenant_if_not_exist(account=account)
@@ -764,7 +764,7 @@ class RegisterService:
         try:
             # Register
             account = AccountService.create_account(
-                #id=uuid.uuid4(),  # 生成唯一的 UUID Arthur:Oracle
+                #id=uuid.uuid4(),  # 生成唯一的 UUID Oracle
                 email=email,
                 name=name,
                 interface_language=languages[0],

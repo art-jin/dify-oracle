@@ -35,6 +35,8 @@
 </div>
 
 
+#
+
 <div align="center">
   <a href="https://trendshift.io/repositories/2152" target="_blank"><img src="https://trendshift.io/api/badge/repositories/2152" alt="langgenius%2Fdify | 趋势转变" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </div>
@@ -63,7 +65,7 @@ Start the oracle container, pull the image of oracle 23ai free, and execute the 
 Create two users: user difyMeta0142, which is used for building the metadata database table.  User dify, used for building vector libraries.
 
 
-### 2. Server Deployment
+### 2、Server Deployment
 For the deployment steps of the source code, refer to the Dify documentation: <a href="https://docs.dify.ai/getting-started/install-self-hosted/local-source-code">Start with Local Source Code</a>, and provide detailed instructions in the differences section
 #### 2.1、Installation of the basic environment:
 Server startup requires Python 3.12. It is recommended to use pyenv for quick installation of the Python environment.<br>
@@ -77,21 +79,20 @@ pyenv global 3.12
 ```
 
 #### 2.2 Follow these steps :
-1. Navigate to the "api" directory: 
+1、
 ```bash
 cd api
 ```
-2. Copy the environment variable configuration file. In the .env.example file, the default vector database has been configured as oracle
+2、In the .env.example file, the default vector database has been configured as oracle
 ```bash
 cp .env.example .env
 ```
-3. Generate a random secret key and replace the value of SECRET_KEY in the .env file :
+3、 :
 ```bash
 awk -v key="$(openssl rand -base64 42)" '/^SECRET_KEY=/ {sub(/=.*/, "=" key)} 1' .env > temp_env && mv temp_env .env
 ```
-4. Install the required dependencies:
-<br> Dify API service uses <a href="https://python-poetry.org/docs/">Poetry</a> to manage dependencies.
-You need to install Poetry first, <br>and then install the poetry shell plugin
+4、Dify API service uses <a href="https://python-poetry.org/docs/">Poetry</a> to manage dependencies.:
+You need to install Poetry first, and then install the poetry shell plugin
 ```bash
 poetry self add poetry-plugin-shell : https://github.com/python-poetry/poetry-plugin-shell
 ```
@@ -102,12 +103,12 @@ poetry env use 3.12
 poetry install
 ```
 
-5. Perform the database migration:
-<br>Perform database migration to the latest version:
+5 :Perform the database migration:<br>
+Perform database migration to the latest version:
 ```bash
 poetry run flask db upgrade
 ```
-In this step, you will go through the steps under /api/migrations/ to create the metadatabase table.
+这一步会通过/api/migrations/下的脚步,创建元数据库表.
 
 #### 2.3 Start the API server:
 
@@ -120,24 +121,24 @@ poetry run flask run --host 0.0.0.0 --port=5001 --debug
 ```bash
 poetry run celery -A app.celery worker -P gevent -c 1 --loglevel INFO -Q dataset,generation,mail,ops_trace
 ```
-### 3. Deploy the frontend page
+### 3、Deploy the frontend page
 
-#### 3.1 Enter the web directory
+#### 3.1、Enter the web directory
 ```bash
 cd web
 ```
 
-#### 3.2 Install the dependencies.
+#### 3.2、Install the dependencies.
 ```bash
 npm install
 ```
 
-#### 3.3  Build the code
+#### 3.3、 Build the code
 ```bash
 npm run build
 ```
 
-#### 3.4 Start the web service
+#### 3.4、Start the web service
 ```bash
 npm run start
 ```

@@ -45,8 +45,7 @@
 数据库(目前适配Dify自托管 社区版的<a href="https://github.com/langgenius/dify/tree/0.14.2">0.14.2</a>版本),适配供学习和参考。
 
 ## 安装部署
-- 本项目目前仅支持使用源码部署方式部署
-
+目前仅支持使用源码部署方式部署
 ### 1、Clone Dify 
 获得源码
 ```bash
