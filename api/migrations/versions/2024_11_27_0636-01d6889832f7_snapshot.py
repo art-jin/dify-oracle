@@ -1417,7 +1417,7 @@ def upgrade():
         sa.Column(
             "message_price_unit", sa.Numeric(precision=10, scale=7), server_default=sa.text("0.001"), nullable=False
         ),
-        sa.Column("answer", sa.Text(), nullable=True),##Oracle
+        sa.Column("answer", sa.Text(), nullable=True),##Oracle 0320
         sa.Column("answer_tokens", sa.Integer(), server_default=sa.text("0"), nullable=False),
         sa.Column("answer_unit_price", sa.Numeric(precision=10, scale=4), nullable=False),
         sa.Column(
