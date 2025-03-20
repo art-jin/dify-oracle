@@ -79,19 +79,19 @@ pyenv global 3.12
 ```
 
 #### 2.2 Follow these steps :
-1、
+1. change directory
 ```bash
 cd api
 ```
-2、In the .env.example file, the default vector database has been configured as oracle
+2. In the .env.example file, the default vector database has been configured as oracle
 ```bash
 cp .env.example .env
 ```
-3、 :
+3.  Generate a random secret key and replace the value of SECRET_KEY in the .env file:
 ```bash
 awk -v key="$(openssl rand -base64 42)" '/^SECRET_KEY=/ {sub(/=.*/, "=" key)} 1' .env > temp_env && mv temp_env .env
 ```
-4、Dify API service uses <a href="https://python-poetry.org/docs/">Poetry</a> to manage dependencies.:
+4. Dify API service uses <a href="https://python-poetry.org/docs/">Poetry</a> to manage dependencies.:
 You need to install Poetry first, and then install the poetry shell plugin
 ```bash
 poetry self add poetry-plugin-shell : https://github.com/python-poetry/poetry-plugin-shell
@@ -103,7 +103,7 @@ poetry env use 3.12
 poetry install
 ```
 
-5 :Perform the database migration:<br>
+5. Perform the database migration:<br>
 Perform database migration to the latest version:
 ```bash
 poetry run flask db upgrade
