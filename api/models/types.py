@@ -82,8 +82,7 @@ class AdjustedJSON(TypeDecorator):
     def process_result_value(self, value, dialect):
         if value is None:
             return value
-        print(f"Type of value: {type(value)}")
-        print(f"Value content: {value}")
+
         if dialect.name == "oracle":
             # Oracle returns CLOB, which needs to be read
             # Check if value is a CLOB or a string
