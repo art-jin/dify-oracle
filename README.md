@@ -108,7 +108,7 @@ Perform database migration to the latest version:
 ```bash
 poetry run flask db upgrade
 ```
-这一步会通过/api/migrations/下的脚步,创建元数据库表.
+In this step, you will go through the steps under /api/migrations/ to create the metadatabase table.
 
 #### 2.3 Start the API server:
 
@@ -143,6 +143,7 @@ npm run build
 npm run start
 ```
 ## Contributing
+If you have any suggestions, you can contact me through arthur.jin@126.com.
 
 ## License
 
