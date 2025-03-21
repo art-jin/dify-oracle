@@ -63,6 +63,9 @@ docker compose -f docker-compose.middleware.yaml up -d oracle
 ```
 Start the oracle container, pull the image of oracle 23ai free, and execute the /docker/startupscripts/init_user.script script.
 Create two users: user difyMeta0142, which is used for building the metadata database table.  User dify, used for building vector libraries.
+<img src="images/01.docker up.30.11.png">
+<img src="images/01.docker oracle.up.png">
+
 
 
 ### 2. Server Deployment
@@ -109,6 +112,10 @@ Perform database migration to the latest version:
 poetry run flask db upgrade
 ```
 In this step, you will go through the steps under /api/migrations/ to create the metadatabase table.
+<img src="images/2.5.db.upgrade.png">
+If you use the user in the configuration file to access the database through sqldeveloper, you can see that the system table has been created
+<img src="images/2.5.db.final.png">
+
 
 #### 2.3 Start the API server:
 
