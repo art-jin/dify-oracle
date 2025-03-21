@@ -64,7 +64,7 @@ docker compose -f docker-compose.middleware.yaml up -d oracle
 Start the oracle container, pull the image of oracle 23ai free, and execute the /docker/startupscripts/init_user.script script.
 Create two users: user difyMeta0142, which is used for building the metadata database table.  User dify, used for building vector libraries.
 <img src="images/01.docker up.30.11.png">
-<img src="images/01.docker oracle.up.png">
+<img src="images/01.docker.oracle.up.png">
 
 
 
