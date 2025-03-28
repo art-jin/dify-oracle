@@ -50,7 +50,7 @@ class AppQueueManager:
         # wait for APP_MAX_EXECUTION_TIME seconds to stop listen
         listen_timeout = dify_config.APP_MAX_EXECUTION_TIME
         start_time = time.time()
-        last_ping_time = 0
+        last_ping_time: int | float = 0
         while True:
             try:
                 message = self._q.get(timeout=1)
@@ -167,8 +167,7 @@ class AppQueueManager:
         else:
             if isinstance(data, DeclarativeMeta) or hasattr(data, "_sa_instance_state"):
                 raise TypeError(
-                    "Critical Error: Passing SQLAlchemy Model instances "
-                    "that cause thread safety issues is not allowed."
+                    "Critical Error: Passing SQLAlchemy Model instances that cause thread safety issues is not allowed."
                 )
 
 

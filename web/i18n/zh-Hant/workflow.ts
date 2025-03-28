@@ -104,6 +104,8 @@ const translation = {
     openInExplore: '在“探索”中打開',
     onFailure: '失敗時',
     addFailureBranch: '添加 Fail Branch',
+    loadMore: '載入更多工作流',
+    noHistory: '無歷史記錄',
   },
   env: {
     envPanelTitle: '環境變數',
@@ -333,7 +335,7 @@ const translation = {
         retryFailed: '重試失敗',
         retryFailedTimes: '{{times}} 次重試失敗',
         times: '次',
-        ms: '女士',
+        ms: '毫秒',
         retries: '{{num}}重試',
       },
     },
@@ -505,7 +507,7 @@ const translation = {
       optionName: {
         image: '圖像',
         url: '網址',
-        doc: '醫生',
+        doc: '文檔',
         localUpload: '本地上傳',
         video: '視頻',
         audio: '音訊',

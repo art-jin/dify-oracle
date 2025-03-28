@@ -8,15 +8,18 @@ import os
 import pickle
 import re
 import time
-import uuid
 from json import JSONDecodeError
+from typing import Any, cast
 
 from sqlalchemy import func
 from sqlalchemy.sql import case
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped
 
 from configs import dify_config
 from core.rag.retrieval.retrieval_methods import RetrievalMethod
 from extensions.ext_storage import storage
+from services.entities.knowledge_entities.knowledge_entities import ParentMode, Rule
 
 from .account import Account
 from .engine import db
@@ -30,7 +33,7 @@ class DatasetPermissionEnum(enum.StrEnum):
     PARTIAL_TEAM = "partial_members"
 
 
-class Dataset(db.Model):
+class Dataset(db.Model):  # type: ignore[name-defined]
     __tablename__ = "datasets"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="dataset_pkey"),
@@ -140,7 +143,7 @@ class Dataset(db.Model):
         #    .filter(Document.dataset_id == self.id)
         #    .scalar()
         #)
-        from models.dataset import Document  # 避免循环导入
+        #from models.dataset import Document  # 避免循环导入
         try:
             result = db.session.query(
                 func.coalesce(
@@ -218,7 +221,7 @@ class Dataset(db.Model):
         return f"Vector_index_{normalized_dataset_id}_Node"
 
 
-class DatasetProcessRule(db.Model):
+class DatasetProcessRule(db.Model):  # type: ignore[name-defined]
     __tablename__ = "dataset_process_rules"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="dataset_process_rule_pkey"),
@@ -234,9 +237,9 @@ class DatasetProcessRule(db.Model):
     created_by = db.Column(StringUUID, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
-    MODES = ["automatic", "custom"]
+    MODES = ["automatic", "custom", "hierarchical"]
     PRE_PROCESSING_RULES = ["remove_stopwords", "remove_extra_spaces", "remove_urls_emails"]
-    AUTOMATIC_RULES = {
+    AUTOMATIC_RULES: dict[str, Any] = {
         "pre_processing_rules": [
             {"id": "remove_extra_spaces", "enabled": True},
             {"id": "remove_urls_emails", "enabled": False},
@@ -250,8 +253,8 @@ class DatasetProcessRule(db.Model):
             "dataset_id": self.dataset_id,
             "mode": self.mode,
             "rules": self.rules_dict,
-            "created_by": self.created_by,
-            "created_at": self.created_at,
+            #"created_by": self.created_by,
+            #"created_at": self.created_at,
         }
 
     @property
@@ -262,7 +265,7 @@ class DatasetProcessRule(db.Model):
             return None
 
 
-class Document(db.Model):
+class Document(db.Model):  # type: ignore[name-defined]
     __tablename__ = "documents"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="document_pkey"),
@@ -416,7 +419,7 @@ class Document(db.Model):
 
     @property
     def hit_count(self):
-        from models.dataset import DocumentSegment  # 避免循环导入
+        #from models.dataset import DocumentSegment  # 避免循环导入
         ##这个修改使用了 SQLAlchemy 的 case 表达式来处理 sum 可能为 NULL 的情况，这应该能够在 Oracle 数据库中正确工作。
         """
         return (
@@ -526,7 +529,7 @@ class Document(db.Model):
         )
 
 
-class DocumentSegment(db.Model):
+class DocumentSegment(db.Model):  # type: ignore[name-defined]
     __tablename__ = "document_segments"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="document_segment_pkey"),
@@ -544,7 +547,7 @@ class DocumentSegment(db.Model):
     tenant_id = db.Column(StringUUID, nullable=False)
     dataset_id = db.Column(StringUUID, nullable=False)
     document_id = db.Column(StringUUID, nullable=False)
-    position = db.Column(db.Integer, nullable=False)
+    position: Mapped[int]
     content = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text, nullable=True)
     word_count = db.Column(db.Integer, nullable=False)
@@ -563,7 +566,7 @@ class DocumentSegment(db.Model):
     disabled_at = db.Column(db.DateTime, nullable=True)
     disabled_by = db.Column(StringUUID, nullable=True)
     #status = db.Column(db.String(255), nullable=False, default="waiting")
-    status = db.Column(db.String(255), nullable=False, server_default=db.text("'waiting'"))  ##Oracle
+    status = db.Column(db.String(255), nullable=False, server_default=db.text("'waiting'::character varying"))  ##Oracle
     created_by = db.Column(StringUUID, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_by = db.Column(StringUUID, nullable=True)
@@ -596,6 +599,24 @@ class DocumentSegment(db.Model):
             .filter(DocumentSegment.document_id == self.document_id, DocumentSegment.position == self.position + 1)
             .first()
         )
+
+    @property
+    def child_chunks(self):
+        process_rule = self.document.dataset_process_rule
+        if process_rule.mode == "hierarchical":
+            rules = Rule(**process_rule.rules_dict)
+            if rules.parent_mode and rules.parent_mode != ParentMode.FULL_DOC:
+                child_chunks = (
+                    db.session.query(ChildChunk)
+                    .filter(ChildChunk.segment_id == self.id)
+                    .order_by(ChildChunk.position.asc())
+                    .all()
+                )
+                return child_chunks or []
+            else:
+                return []
+        else:
+            return []
 
     def get_sign_content(self):
         signed_urls = []
@@ -642,7 +663,48 @@ class DocumentSegment(db.Model):
         return text
 
 
-class AppDatasetJoin(db.Model):
+class ChildChunk(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "child_chunks"
+    __table_args__ = (
+        db.PrimaryKeyConstraint("id", name="child_chunk_pkey"),
+        db.Index("child_chunk_dataset_id_idx", "tenant_id", "dataset_id", "document_id", "segment_id", "index_node_id"),
+    )
+
+    # initial fields
+    id = db.Column(StringUUID, nullable=False, server_default=db.text("SYS_GUID()")) ##Oracle
+    tenant_id = db.Column(StringUUID, nullable=False)
+    dataset_id = db.Column(StringUUID, nullable=False)
+    document_id = db.Column(StringUUID, nullable=False)
+    segment_id = db.Column(StringUUID, nullable=False)
+    position = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    word_count = db.Column(db.Integer, nullable=False)
+    # indexing fields
+    index_node_id = db.Column(db.String(255), nullable=True)
+    index_node_hash = db.Column(db.String(255), nullable=True)
+    type = db.Column(db.String(255), nullable=False, server_default=db.text("'automatic'::character varying"))
+    created_by = db.Column(StringUUID, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP"))
+    updated_by = db.Column(StringUUID, nullable=True)
+    updated_at = db.Column(db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP"))
+    indexing_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    error = db.Column(db.Text, nullable=True)
+
+    @property
+    def dataset(self):
+        return db.session.query(Dataset).filter(Dataset.id == self.dataset_id).first()
+
+    @property
+    def document(self):
+        return db.session.query(Document).filter(Document.id == self.document_id).first()
+
+    @property
+    def segment(self):
+        return db.session.query(DocumentSegment).filter(DocumentSegment.id == self.segment_id).first()
+
+
+class AppDatasetJoin(db.Model):  # type: ignore[name-defined]
     __tablename__ = "app_dataset_joins"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="app_dataset_join_pkey"),
@@ -660,7 +722,7 @@ class AppDatasetJoin(db.Model):
         return db.session.get(App, self.app_id)
 
 
-class DatasetQuery(db.Model):
+class DatasetQuery(db.Model):  # type: ignore[name-defined]
     __tablename__ = "dataset_queries"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="dataset_query_pkey"),
@@ -678,7 +740,7 @@ class DatasetQuery(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
 
 
-class DatasetKeywordTable(db.Model):
+class DatasetKeywordTable(db.Model):  # type: ignore[name-defined]
     __tablename__ = "dataset_keyword_tables"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="dataset_keyword_table_pkey"),
@@ -723,7 +785,7 @@ class DatasetKeywordTable(db.Model):
                 return None
 
 
-class Embedding(db.Model):
+class Embedding(db.Model):  # type: ignore[name-defined]
     __tablename__ = "embeddings"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="embedding_pkey"),
@@ -745,10 +807,10 @@ class Embedding(db.Model):
         self.embedding = pickle.dumps(embedding_data, protocol=pickle.HIGHEST_PROTOCOL)
 
     def get_embedding(self) -> list[float]:
-        return pickle.loads(self.embedding)
+        return cast(list[float], pickle.loads(self.embedding))
 
 
-class DatasetCollectionBinding(db.Model):
+class DatasetCollectionBinding(db.Model):  # type: ignore[name-defined]
     __tablename__ = "dataset_collection_bindings"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="dataset_collection_bindings_pkey"),
@@ -766,7 +828,7 @@ class DatasetCollectionBinding(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class TidbAuthBinding(db.Model):
+class TidbAuthBinding(db.Model):  # type: ignore[name-defined]
     __tablename__ = "tidb_auth_bindings"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="tidb_auth_bindings_pkey"),
@@ -788,7 +850,7 @@ class TidbAuthBinding(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class Whitelist(db.Model):
+class Whitelist(db.Model):  # type: ignore[name-defined]
     __tablename__ = "whitelists"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="whitelists_pkey"),
@@ -802,7 +864,7 @@ class Whitelist(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class DatasetPermission(db.Model):
+class DatasetPermission(db.Model):  # type: ignore[name-defined]
     __tablename__ = "dataset_permissions"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="dataset_permission_pkey"),
@@ -822,7 +884,7 @@ class DatasetPermission(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class ExternalKnowledgeApis(db.Model):
+class ExternalKnowledgeApis(db.Model):  # type: ignore[name-defined]
     __tablename__ = "external_knowledge_apis"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="external_knowledge_apis_pkey"),
@@ -877,7 +939,7 @@ class ExternalKnowledgeApis(db.Model):
         return dataset_bindings
 
 
-class ExternalKnowledgeBindings(db.Model):
+class ExternalKnowledgeBindings(db.Model):  # type: ignore[name-defined]
     __tablename__ = "external_knowledge_bindings"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="external_knowledge_bindings_pkey"),
@@ -893,8 +955,25 @@ class ExternalKnowledgeBindings(db.Model):
     tenant_id = db.Column(StringUUID, nullable=False)
     external_knowledge_api_id = db.Column(StringUUID, nullable=False)
     dataset_id = db.Column(StringUUID, nullable=False)
-    external_knowledge_id = db.Column(StringUUID, nullable=False)
+    external_knowledge_id = db.Column(db.Text, nullable=False)
     created_by = db.Column(StringUUID, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_by = db.Column(StringUUID, nullable=True)
     updated_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
+
+
+class DatasetAutoDisableLog(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "dataset_auto_disable_logs"
+    __table_args__ = (
+        db.PrimaryKeyConstraint("id", name="dataset_auto_disable_log_pkey"),
+        db.Index("dataset_auto_disable_log_tenant_idx", "tenant_id"),
+        db.Index("dataset_auto_disable_log_dataset_idx", "dataset_id"),
+        db.Index("dataset_auto_disable_log_created_atx", "created_at"),
+    )
+
+    id = db.Column(StringUUID, server_default=db.text("uuid_generate_v4()"))
+    tenant_id = db.Column(StringUUID, nullable=False)
+    dataset_id = db.Column(StringUUID, nullable=False)
+    document_id = db.Column(StringUUID, nullable=False)
+    notified = db.Column(db.Boolean, nullable=False, server_default=db.text("false"))
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP"))

@@ -4,11 +4,11 @@ import uuid
 from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum, StrEnum
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional, cast
 
 import sqlalchemy as sa
 from flask import request
-from flask_login import UserMixin
+from flask_login import UserMixin  # type: ignore
 from sqlalchemy import Float, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,7 +20,6 @@ from libs.helper import generate_string
 from models.enums import CreatedByRole
 from models.workflow import WorkflowRunStatus
 
-
 from .account import Account, Tenant
 from .engine import db
 from .types import AdaptiveText, StringUUID
@@ -29,7 +28,7 @@ if TYPE_CHECKING:
     from .workflow import Workflow
 
 
-class DifySetup(db.Model):
+class DifySetup(db.Model):  # type: ignore[name-defined]
     __tablename__ = "dify_setups"
     __table_args__ = (db.PrimaryKeyConstraint("version", name="dify_setup_pkey"),)
 
@@ -64,7 +63,7 @@ class IconType(Enum):
     EMOJI = "emoji"
 
 
-class App(db.Model):
+class App(db.Model):  # type: ignore[name-defined]
     __tablename__ = "apps"
     __table_args__ = (db.PrimaryKeyConstraint("id", name="app_pkey"), db.Index("app_tenant_id_idx", "tenant_id"))
 
@@ -156,7 +155,7 @@ class App(db.Model):
         if self.mode == AppMode.CHAT.value and self.is_agent:
             return AppMode.AGENT_CHAT.value
 
-        return self.mode
+        return str(self.mode)
 
     @property
     def deleted_tools(self) -> list:
@@ -222,7 +221,7 @@ class App(db.Model):
 
 from models.types import AdjustedJSON #Oracle:AdjustedJSON
 
-class AppModelConfig(db.Model):
+class AppModelConfig(db.Model):  # type: ignore[name-defined]
     __tablename__ = "app_model_configs"
     __table_args__ = (db.PrimaryKeyConstraint("id", name="app_model_config_pkey"), db.Index("app_app_id_idx", "app_id"))
 
@@ -326,7 +325,7 @@ class AppModelConfig(db.Model):
         return json.loads(self.external_data_tools) if self.external_data_tools else []
 
     @property
-    def user_input_form_list(self) -> dict:
+    def user_input_form_list(self) -> list[dict]:
         return json.loads(self.user_input_form) if self.user_input_form else []
 
     @property
@@ -348,7 +347,7 @@ class AppModelConfig(db.Model):
     @property
     def dataset_configs_dict(self) -> dict:
         if self.dataset_configs:
-            dataset_configs = json.loads(self.dataset_configs)
+            dataset_configs: dict = json.loads(self.dataset_configs)
             if "retrieval_model" not in dataset_configs:
                 return {"retrieval_model": "single"}
             else:
@@ -470,7 +469,7 @@ class AppModelConfig(db.Model):
         return new_app_model_config
 
 
-class RecommendedApp(db.Model):
+class RecommendedApp(db.Model):  # type: ignore[name-defined]
     __tablename__ = "recommended_apps"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="recommended_app_pkey"),
@@ -485,7 +484,7 @@ class RecommendedApp(db.Model):
     description = db.Column(AdjustedJSON, nullable=False)
     copyright = db.Column(db.String(255), nullable=False)
     privacy_policy = db.Column(db.String(255), nullable=False)
-    custom_disclaimer: Mapped[str] = mapped_column(sa.CLOB, default="")
+    custom_disclaimer: Mapped[str] = mapped_column(sa.CLOB, default="default") ##Oracle 0323
     category = db.Column(db.String(255), nullable=False)
     position = db.Column(db.Integer, nullable=False, default=0)
     is_listed = db.Column(db.Boolean, nullable=False, default=True)
@@ -500,7 +499,7 @@ class RecommendedApp(db.Model):
         return app
 
 
-class InstalledApp(db.Model):
+class InstalledApp(db.Model):  # type: ignore[name-defined]
     __tablename__ = "installed_apps"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="installed_app_pkey"),
@@ -530,7 +529,7 @@ class InstalledApp(db.Model):
         return tenant
 
 
-class Conversation(db.Model):
+class Conversation(db.Model):  # type: ignore[name-defined]
     __tablename__ = "conversations"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="conversation_pkey"),
@@ -611,6 +610,8 @@ class Conversation(db.Model):
     @property
     def model_config(self):
         model_config = {}
+        app_model_config: Optional[AppModelConfig] = None
+
         if self.mode == AppMode.ADVANCED_CHAT.value:
             if self.override_model_configs:
                 override_model_configs = json.loads(self.override_model_configs)
@@ -622,6 +623,7 @@ class Conversation(db.Model):
                 if "model" in override_model_configs:
                     app_model_config = AppModelConfig()
                     app_model_config = app_model_config.from_model_config_dict(override_model_configs)
+                    assert app_model_config is not None, "app model config not found"
                     model_config = app_model_config.to_dict()
                 else:
                     model_config["configs"] = override_model_configs
@@ -764,7 +766,7 @@ class Conversation(db.Model):
         return self.override_model_configs is not None
 
 
-class Message(db.Model):
+class Message(db.Model):  # type: ignore[name-defined]
     __tablename__ = "messages"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="message_pkey"),
@@ -1007,7 +1009,7 @@ class Message(db.Model):
         if not current_app:
             raise ValueError(f"App {self.app_id} not found")
 
-        files: list[File] = []
+        files = []
         for message_file in message_files:
             if message_file.transfer_method == "local_file":
                 if message_file.upload_file_id is None:
@@ -1075,8 +1077,10 @@ class Message(db.Model):
             "id": self.id,
             "app_id": self.app_id,
             "conversation_id": self.conversation_id,
+            "model_id": self.model_id,
             "inputs": self.inputs,
             "query": self.query,
+            "total_price": self.total_price,
             "message": self.message,
             "answer": self.answer,
             "status": self.status,
@@ -1097,7 +1101,9 @@ class Message(db.Model):
             id=data["id"],
             app_id=data["app_id"],
             conversation_id=data["conversation_id"],
+            model_id=data["model_id"],
             inputs=data["inputs"],
+            total_price=data["total_price"],
             query=data["query"],
             message=data["message"],
             answer=data["answer"],
@@ -1114,7 +1120,7 @@ class Message(db.Model):
         )
 
 
-class MessageFeedback(db.Model):
+class MessageFeedback(db.Model):  # type: ignore[name-defined]
     __tablename__ = "message_feedbacks"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="message_feedback_pkey"),
@@ -1183,7 +1189,7 @@ class MessageFile(db.Model):
     created_at: Mapped[datetime] = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class MessageAnnotation(db.Model):
+class MessageAnnotation(db.Model):  # type: ignore[name-defined]
     __tablename__ = "message_annotations"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="message_annotation_pkey"),
@@ -1215,7 +1221,7 @@ class MessageAnnotation(db.Model):
         return account
 
 
-class AppAnnotationHitHistory(db.Model):
+class AppAnnotationHitHistory(db.Model):  # type: ignore[name-defined]
     __tablename__ = "app_annotation_hit_histories"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="app_annotation_hit_histories_pkey"),
@@ -1254,7 +1260,7 @@ class AppAnnotationHitHistory(db.Model):
         return account
 
 
-class AppAnnotationSetting(db.Model):
+class AppAnnotationSetting(db.Model):  # type: ignore[name-defined]
     __tablename__ = "app_annotation_settings"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="app_annotation_settings_pkey"),
@@ -1303,7 +1309,7 @@ class AppAnnotationSetting(db.Model):
         return collection_binding_detail
 
 
-class OperationLog(db.Model):
+class OperationLog(db.Model):  # type: ignore[name-defined]
     __tablename__ = "operation_logs"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="operation_log_pkey"),
@@ -1322,7 +1328,7 @@ class OperationLog(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class EndUser(UserMixin, db.Model):
+class EndUser(UserMixin, db.Model):  # type: ignore[name-defined]
     __tablename__ = "end_users"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="end_user_pkey"),
@@ -1338,12 +1344,12 @@ class EndUser(UserMixin, db.Model):
     external_user_id = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(255))
     is_anonymous = db.Column(db.Boolean, nullable=False, server_default=db.text("true"))
-    session_id = db.Column(db.String(255), nullable=False)
+    session_id: Mapped[str] = mapped_column()
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class Site(db.Model):
+class Site(db.Model):  # type: ignore[name-defined]
     __tablename__ = "sites"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="site_pkey"),
@@ -1366,7 +1372,7 @@ class Site(db.Model):
     privacy_policy = db.Column(db.String(255))
     show_workflow_steps = db.Column(db.Boolean, nullable=False, server_default=db.text("true"))
     use_icon_as_answer_icon = db.Column(db.Boolean, nullable=False, server_default=db.text("false"))
-    _custom_disclaimer: Mapped[str] = mapped_column("custom_disclaimer", sa.CLOB, default=" ")
+    _custom_disclaimer: Mapped[str] = mapped_column("custom_disclaimer", sa.TEXT, default="default") ##Oracle 0323
     customize_domain = db.Column(db.String(255))
     customize_token_strategy = db.Column(db.String(255), nullable=False)
     prompt_public = db.Column(db.Boolean, nullable=False, server_default=db.text("false"))
@@ -1401,7 +1407,7 @@ class Site(db.Model):
         return dify_config.APP_WEB_URL or request.url_root.rstrip("/")
 
 
-class ApiToken(db.Model):
+class ApiToken(db.Model):  # type: ignore[name-defined]
     __tablename__ = "api_tokens"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="api_token_pkey"),
@@ -1423,13 +1429,12 @@ class ApiToken(db.Model):
     def generate_api_key(prefix, n):
         while True:
             result = prefix + generate_string(n)
-            while db.session.query(ApiToken).filter(ApiToken.token == result).count() > 0:
-                result = prefix + generate_string(n)
-
+            if db.session.query(ApiToken).filter(ApiToken.token == result).count() > 0:
+                continue
             return result
 
 
-class UploadFile(db.Model):
+class UploadFile(db.Model):  # type: ignore[name-defined]
     __tablename__ = "upload_files"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="upload_file_pkey"),
@@ -1490,7 +1495,7 @@ class UploadFile(db.Model):
         self.source_url = source_url
 
 
-class ApiRequest(db.Model):
+class ApiRequest(db.Model):  # type: ignore[name-defined]
     __tablename__ = "api_requests"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="api_request_pkey"),
@@ -1508,7 +1513,7 @@ class ApiRequest(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class MessageChain(db.Model):
+class MessageChain(db.Model):  # type: ignore[name-defined]
     __tablename__ = "message_chains"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="message_chain_pkey"),
@@ -1524,7 +1529,7 @@ class MessageChain(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
 
 
-class MessageAgentThought(db.Model):
+class MessageAgentThought(db.Model):  # type: ignore[name-defined]
     __tablename__ = "message_agent_thoughts"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="message_agent_thought_pkey"),
@@ -1565,7 +1570,7 @@ class MessageAgentThought(db.Model):
     @property
     def files(self) -> list:
         if self.message_files:
-            return json.loads(self.message_files)
+            return cast(list[Any], json.loads(self.message_files))
         else:
             return []
 
@@ -1577,7 +1582,7 @@ class MessageAgentThought(db.Model):
     def tool_labels(self) -> dict:
         try:
             if self.tool_labels_str:
-                return json.loads(self.tool_labels_str)
+                return cast(dict, json.loads(self.tool_labels_str))
             else:
                 return {}
         except Exception as e:
@@ -1587,7 +1592,7 @@ class MessageAgentThought(db.Model):
     def tool_meta(self) -> dict:
         try:
             if self.tool_meta_str:
-                return json.loads(self.tool_meta_str)
+                return cast(dict, json.loads(self.tool_meta_str))
             else:
                 return {}
         except Exception as e:
@@ -1635,9 +1640,11 @@ class MessageAgentThought(db.Model):
         except Exception as e:
             if self.observation:
                 return dict.fromkeys(tools, self.observation)
+            else:
+                return {}
 
 
-class DatasetRetrieverResource(db.Model):
+class DatasetRetrieverResource(db.Model):  # type: ignore[name-defined]
     __tablename__ = "dataset_retriever_resources"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="dataset_retriever_resource_pkey"),
@@ -1665,7 +1672,7 @@ class DatasetRetrieverResource(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
 
 
-class Tag(db.Model):
+class Tag(db.Model):  # type: ignore[name-defined]
     __tablename__ = "tags"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="tag_pkey"),
@@ -1684,7 +1691,7 @@ class Tag(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class TagBinding(db.Model):
+class TagBinding(db.Model):  # type: ignore[name-defined]
     __tablename__ = "tag_bindings"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="tag_binding_pkey"),
@@ -1701,7 +1708,7 @@ class TagBinding(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class TraceAppConfig(db.Model):
+class TraceAppConfig(db.Model):  # type: ignore[name-defined]
     __tablename__ = "trace_app_config"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="tracing_app_config_pkey"),

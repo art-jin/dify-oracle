@@ -11,7 +11,7 @@ class ApiKeyAuthService:
     def get_provider_auth_list(tenant_id: str) -> list:
         data_source_api_key_bindings = (
             db.session.query(DataSourceApiKeyAuthBinding)
-            .filter(DataSourceApiKeyAuthBinding.tenant_id == tenant_id, DataSourceApiKeyAuthBinding.disabled==0)   ##Oracle : replace boolean with int 0. PG: disabled.is_(False))
+            .filter(DataSourceApiKeyAuthBinding.tenant_id == tenant_id, DataSourceApiKeyAuthBinding.disabled==0)   ##Oracle : replace boo;ean with int 0. PG: disabled.is_(False))
             .all()
         )
         return data_source_api_key_bindings

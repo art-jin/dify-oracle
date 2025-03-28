@@ -1,5 +1,5 @@
 from flask import request
-from flask_restful import Resource, reqparse
+from flask_restful import Resource, reqparse  # type: ignore
 
 from configs import dify_config
 from libs.helper import StrLen, email, extract_remote_ip
@@ -30,8 +30,8 @@ class SetupApi(Resource):
 
         # is tenant created
         tenant_count = TenantService.get_tenant_count()
-        #if tenant_count > 0:  #Oracle, 记录中是1,先继续
-        #    raise AlreadySetupError()
+        if tenant_count > 0:
+            raise AlreadySetupError()
 
         if not get_init_validate_status():
             raise NotInitValidateError()

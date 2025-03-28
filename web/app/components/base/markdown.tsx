@@ -10,6 +10,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter'
 import { atelierHeathLight } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import { Component, memo, useMemo, useRef, useState } from 'react'
 import type { CodeComponent } from 'react-markdown/lib/ast-to-react'
+import SVGRenderer from './svg-gallery'
 import cn from '@/utils/classnames'
 import CopyBtn from '@/app/components/base/copy-btn'
 import SVGBtn from '@/app/components/base/svg'
@@ -18,7 +19,7 @@ import ImageGallery from '@/app/components/base/image-gallery'
 import { useChatContext } from '@/app/components/base/chat/chat/context'
 import VideoGallery from '@/app/components/base/video-gallery'
 import AudioGallery from '@/app/components/base/audio-gallery'
-import SVGRenderer from '@/app/components/base/svg-gallery'
+// import SVGRenderer from '@/app/components/base/svg-gallery'
 import MarkdownButton from '@/app/components/base/markdown-blocks/button'
 import MarkdownForm from '@/app/components/base/markdown-blocks/form'
 
@@ -111,9 +112,9 @@ const CodeBlock: CodeComponent = memo(({ inline, className, children, ...props }
     }
     else if (language === 'echarts') {
       return (
-        <div style={{ minHeight: '350px', minWidth: '700px' }}>
+        <div style={{ minHeight: '350px', minWidth: '100%', overflowX: 'scroll' }}>
           <ErrorBoundary>
-            <ReactEcharts option={chartData} />
+            <ReactEcharts option={chartData} style={{ minWidth: '700px' }} />
           </ErrorBoundary>
         </div>
       )
@@ -229,7 +230,11 @@ export function Markdown(props: { content: string; className?: string }) {
   return (
     <div className={cn(props.className, 'markdown-body')}>
       <ReactMarkdown
-        remarkPlugins={[RemarkGfm, RemarkMath, RemarkBreaks]}
+        remarkPlugins={[
+          RemarkGfm,
+          [RemarkMath, { singleDollarTextMath: false }],
+          RemarkBreaks,
+        ]}
         rehypePlugins={[
           RehypeKatex,
           RehypeRaw as any,

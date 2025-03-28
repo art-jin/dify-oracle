@@ -1,5 +1,5 @@
-from flask_restful import marshal_with, reqparse
-from flask_restful.inputs import int_range
+from flask_restful import marshal_with, reqparse  # type: ignore
+from flask_restful.inputs import int_range  # type: ignore
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import NotFound
 
@@ -39,7 +39,7 @@ class ConversationListApi(WebApiResource):
 
         pinned = None
         if "pinned" in args and args["pinned"] is not None:
-            pinned = True if args["pinned"] == "true" else False
+            pinned = args["pinned"] == "true"
 
         try:
             with Session(db.engine) as session:

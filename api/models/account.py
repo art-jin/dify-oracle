@@ -1,8 +1,9 @@
 import enum
 import json
 
-from flask_login import UserMixin
+from flask_login import UserMixin  # type: ignore
 from sqlalchemy import func
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .engine import db
 from .types import AdaptiveText, StringUUID ##MySQL/Oracle
@@ -16,7 +17,7 @@ class AccountStatus(enum.StrEnum):
     CLOSED = "closed"
 
 
-class Account(UserMixin, db.Model):
+class Account(UserMixin, db.Model):  # type: ignore[name-defined]
     __tablename__ = "accounts"
     __table_args__ = (db.PrimaryKeyConstraint("id", name="account_pkey"), db.Index("account_email_idx", "email"))
 
@@ -45,7 +46,8 @@ class Account(UserMixin, db.Model):
 
     @property
     def current_tenant(self):
-        return self._current_tenant
+        # FIXME: fix the type error later, because the type is important maybe cause some bugs
+        return self._current_tenant  # type: ignore
 
     @current_tenant.setter
     def current_tenant(self, value: "Tenant"):
@@ -54,7 +56,8 @@ class Account(UserMixin, db.Model):
         if ta:
             tenant.current_role = ta.role
         else:
-            tenant = None
+            # FIXME: fix the type error later, because the type is important maybe cause some bugs
+            tenant = None  # type: ignore
         self._current_tenant = tenant
 
     @property
@@ -91,7 +94,7 @@ class Account(UserMixin, db.Model):
         return AccountStatus(status_str)
 
     @classmethod
-    def get_by_openid(cls, provider: str, open_id: str) -> db.Model:
+    def get_by_openid(cls, provider: str, open_id: str):
         account_integrate = (
             db.session.query(AccountIntegrate)
             .filter(AccountIntegrate.provider == provider, AccountIntegrate.open_id == open_id)
@@ -136,7 +139,7 @@ class TenantAccountRole(enum.StrEnum):
 
     @staticmethod
     def is_valid_role(role: str) -> bool:
-        return role and role in {
+        return role in {
             TenantAccountRole.OWNER,
             TenantAccountRole.ADMIN,
             TenantAccountRole.EDITOR,
@@ -146,15 +149,15 @@ class TenantAccountRole(enum.StrEnum):
 
     @staticmethod
     def is_privileged_role(role: str) -> bool:
-        return role and role in {TenantAccountRole.OWNER, TenantAccountRole.ADMIN}
+        return role in {TenantAccountRole.OWNER, TenantAccountRole.ADMIN}
 
     @staticmethod
     def is_admin_role(role: str) -> bool:
-        return role and role == TenantAccountRole.ADMIN
+        return role == TenantAccountRole.ADMIN
 
     @staticmethod
     def is_non_owner_role(role: str) -> bool:
-        return role and role in {
+        return role in {
             TenantAccountRole.ADMIN,
             TenantAccountRole.EDITOR,
             TenantAccountRole.NORMAL,
@@ -163,11 +166,11 @@ class TenantAccountRole(enum.StrEnum):
 
     @staticmethod
     def is_editing_role(role: str) -> bool:
-        return role and role in {TenantAccountRole.OWNER, TenantAccountRole.ADMIN, TenantAccountRole.EDITOR}
+        return role in {TenantAccountRole.OWNER, TenantAccountRole.ADMIN, TenantAccountRole.EDITOR}
 
     @staticmethod
     def is_dataset_edit_role(role: str) -> bool:
-        return role and role in {
+        return role in {
             TenantAccountRole.OWNER,
             TenantAccountRole.ADMIN,
             TenantAccountRole.EDITOR,
@@ -175,7 +178,7 @@ class TenantAccountRole(enum.StrEnum):
         }
 
 
-class Tenant(db.Model):
+class Tenant(db.Model):  # type: ignore[name-defined]
     __tablename__ = "tenants"
     __table_args__ = (db.PrimaryKeyConstraint("id", name="tenant_pkey"),)
 
@@ -214,7 +217,7 @@ class TenantAccountJoinRole(enum.Enum):
     DATASET_OPERATOR = "dataset_operator"
 
 
-class TenantAccountJoin(db.Model):
+class TenantAccountJoin(db.Model):  # type: ignore[name-defined]
     __tablename__ = "tenant_account_joins"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="tenant_account_join_pkey"),
@@ -234,7 +237,7 @@ class TenantAccountJoin(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class AccountIntegrate(db.Model):
+class AccountIntegrate(db.Model):  # type: ignore[name-defined]
     __tablename__ = "account_integrates"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="account_integrate_pkey"),
@@ -252,7 +255,7 @@ class AccountIntegrate(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
-class InvitationCode(db.Model):
+class InvitationCode(db.Model):  # type: ignore[name-defined]
     __tablename__ = "invitation_codes"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="invitation_code_pkey"),
