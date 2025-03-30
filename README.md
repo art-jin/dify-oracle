@@ -42,7 +42,7 @@
 </div>
 
 This project is derived from the open-source LLM application development platform project <a href="https://github.com/langgenius/dify">Dify</a>, and it references the project <a href="https://github.com/oceanbase-devhub/dify">oceanbase-devhub/dify</a> which migrated the Dify project's metadata database postgresql to MySQL, adapting the project's metadata database to Oracle
-The database (currently compatible with Dify self-hosted community version <a href="https://github.com/langgenius/dify/tree/0.14.2">0.14.2</a>  & <a href="https://github.com/langgenius/dify/tree/0.15.5">0.15.5</a>  version) is compatible for learning and reference.
+The database (currently compatible with Dify self-hosted community version <a href="https://github.com/langgenius/dify/tree/0.15.4">0.15.4</a> version) is compatible for learning and reference.
 
 ## Installation and Deployment
 Currently, only the source code deployment method is supported for deployment
@@ -50,8 +50,12 @@ Currently, only the source code deployment method is supported for deployment
 Obtain source code
 
 ```bash
-git https://github.com/art-jin/dify-oracle.git
+git https://github.com/art-jin/dify-0.15.4-patch4orcl.git
+git https://github.com/langgenius/dify.git
 ```
+Delete all files under DIY/API/migrations/versions.
+Copy patch file to target.
+
 Start container:
 Before enabling business services, we need to deploy Oracle / Redis first. You can use the following commands to start them:
 

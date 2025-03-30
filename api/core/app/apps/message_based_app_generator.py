@@ -89,7 +89,7 @@ class MessageBasedAppGenerator(BaseAppGenerator):
             Conversation.id == conversation_id,
             Conversation.app_id == app_model.id,
             Conversation.status == "normal",
-            Conversation.is_deleted == 0, ##Oracle : is_deleted is int not Boolean, PG is : Conversation.is_deleted.is_(False),
+            Conversation.is_deleted.is_(False),
         ]
 
         if isinstance(user, Account):
